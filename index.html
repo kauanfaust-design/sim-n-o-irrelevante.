@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sim, Não ou Irrelevante?</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #090d16;
+  color: #f2f4fa;
+  font-family: Arial, sans-serif;
+  min-height: 100vh;
+}
+
+header {
+  text-align: center;
+  padding: 25px 15px;
+  background: #111827;
+  border-bottom: 1px solid #273248;
+}
+
+header h1 {
+  margin: 0;
+  color: #e8b95b;
+  font-size: 27px;
+}
+
+header p {
+  color: #aab4c5;
+  font-size: 13px;
+}
+
+.container {
+  max-width: 750px;
+  margin: 30px auto;
+  padding: 15px;
+}
+
+.panel {
+  background: #141d2d;
+  border: 1px solid #293750;
+  border-radius: 15px;
+  padding: 23px;
+  margin-bottom: 18px;
+}
+
+.tag {
+  color: #e8b95b;
+  font-size: 12px;
+  font-weight: bold;
+  letter-spacing: 2px;
+}
+
+h2 {
+  margin-top: 12px;
+}
+
+.story {
+  font-size: 19px;
+  line-height: 1.6;
+  color: #fff;
+}
+
+input {
+  width: 100%;
+  padding: 16px;
+  background: #0b1220;
+  border: 1px solid #394963;
+  color: white;
+  border-radius: 9px;
+  font-size: 16px;
+  outline: none;
+}
+
+input:focus {
+  border-color: #e8b95b;
+}
+
+button {
+  cursor: pointer;
+  border: 0;
+  border-radius: 9px;
+  padding: 13px 18px;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.primary {
+  background: #d9a943;
+  color: #15100a;
+}
+
+.secondary {
+  background: #27364d;
+  color: white;
+}
+
+button:hover {
+  filter: brightness(1.15);
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 13px;
+}
+
+.answer {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 9px;
+  background: #0c1422;
+  display: none;
+  line-height: 1.5;
+}
+
+.answer strong {
+  color: #e8b95b;
+}
+
+.stats {
+  display: flex;
+  justify-content: space-between;
+  color: #aebbd0;
+  font-size: 14px;
+}
+
+#history {
+  max-height: 240px;
+  overflow: auto;
+}
+
+.entry {
+  border-bottom: 1px solid #293750;
+  padding: 12px 0;
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.hint {
+  color: #e8b95b;
+}
+
+footer {
+  text-align: center;
+  padding: 20px;
+  color: #69778c;
+  font-size: 12px;
+}
+
+@media(max-width:500px) {
+  .panel {
+    padding: 17px;
+  }
+
+  header h1 {
+    font-size: 22px;
+  }
+
+  .story {
+    font-size: 17px;
+  }
+
+  .actions button {
+    flex: 1;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>🕵️ SIM, NÃO OU IRRELEVANTE?</h1>
+  <p>Nem tudo é o que parece. Descubra a verdade.</p>
+</header>
+
+<main class="container">
+
+  <div class="panel stats">
+    <span>🏆 Pontos: <b id="score">0</b></span>
+    <span>🔍 Mistério: <b id="number">1</b></span>
+  </div>
+
+  <div class="panel">
+    <span class="tag">ARQUIVO CONFIDENCIAL</span>
+    <h2 id="title">O mistério</h2>
+    <p class="story" id="story"></p>
+
+    <p style="color:#9eabc0;font-size:13px">
+      Faça perguntas para descobrir o que aconteceu.
+      O mestre responderá Sim, Não ou Irrelevante.
+    </p>
+  </div>
+
+  <div class="panel">
+    <span class="tag">INTERROGATÓRIO</span>
+    <h3>Qual é a sua pergunta?</h3>
+
+    <input
+      id="question"
+      placeholder="Ex: Ele estava sozinho?"
+    >
+
+    <div class="actions">
+      <button class="primary" onclick="ask()">
+        Enviar pergunta
+      </button>
+
+      <button class="secondary" onclick="hint()">
+        💡 Pedir dica
+      </button>
+
+      <button class="secondary" onclick="reveal()">
+        Revelar solução
+      </button>
+    </div>
+
+    <div class="answer" id="answer"></div>
+  </div>
+
+  <div class="panel">
+    <span class="tag">REGISTRO DO CASO</span>
+    <h3>Histórico de perguntas</h3>
+
+    <div id="history">
+      <p style="color:#8492a8">
+        Suas perguntas aparecerão aqui.
+      </p>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="primary" onclick="nextStory()">
+      Próximo mistério →
+    </button>
+  </div>
+
+</main>
+
+<footer>
+  SIM, NÃO OU IRRELEVANTE? • JOGO DE RACIOCÍNIO
+</footer>
+
+<script>
+
+const mysteries = [
+
+{
+ title: "O homem do elevador",
+
+ story: "Um homem mora no décimo andar de um prédio. Todos os dias, quando volta para casa, sobe de elevador até o sétimo andar e depois utiliza as escadas até o décimo. Mas, quando chove, ele vai diretamente ao décimo andar de elevador. Por quê?",
+
+ solution: "O homem é muito baixo e não consegue alcançar o botão do décimo andar. Consegue alcançar apenas o botão do sétimo. Quando chove, usa seu guarda-chuva para apertar o botão do décimo andar.",
+
+ hints: [
+   "A altura dele é importante.",
+   "Pense em algo que ele carrega quando chove."
+ ],
+
+ yes: [
+   "baixo","baixinho","pequeno","baixa estatura",
+   "altura","guarda chuva","sombrinha",
+   "nao alcanca","nao consegue alcançar",
+   "nao consegue apertar","nao chega ao botao",
+   "apertar o botao","alcancar o botao",
+   "guarda chuva para apertar",
+   "nao consegue chegar ao decimo"
+ ],
+
+ no: [
+   "elevador quebrado","elevador estragado",
+   "falta de energia","medo de elevador",
+   "escada rolante","estava machucado"
+ ],
+
+ irrelevant: [
+   "assassino","policia","dinheiro",
+   "trabalho","comida","cachorro"
+ ]
+},
+
+{
+ title: "O copo de água",
+
+ story: "Um homem entra em um bar e pede um copo de água. O atendente pega uma arma e aponta para ele. O homem agradece e vai embora. O que aconteceu?",
+
+ solution: "O homem estava com soluços. O atendente percebeu e apontou a arma para assustá-lo. O susto fez os soluços desaparecerem.",
+
+ hints: [
+   "O homem não estava em perigo real.",
+   "Ele tinha um problema físico passageiro."
+ ],
+
+ yes: [
+   "soluco","soluços","solucos",
+   "engasgado","engasgo","assustar",
+   "assustou","susto","espanto",
+   "parar os soluços","parou de soluçar",
+   "problema na garganta"
+ ],
+
+ no: [
+   "assalto","ladrão","roubo",
+   "policial","inimigo","queria matar",
+   "tiro","disparo"
+ ],
+
+ irrelevant: [
+   "chuva","carro","telefone",
+   "dinheiro","restaurante"
+ ]
+},
+
+{
+ title: "A luz apagada",
+
+ story: "Uma mulher apaga a luz antes de dormir. Na manhã seguinte, centenas de pessoas morreram por causa disso. Como isso é possível?",
+
+ solution: "A mulher era responsável por um farol. Ao apagar sua luz, um navio não conseguiu enxergar a costa e naufragou.",
+
+ hints: [
+   "A mulher trabalhava à noite.",
+   "A luz era importante para outras pessoas."
+ ],
+
+ yes: [
+   "farol","navegacao","navio",
+   "barco","mar","oceano","naufragio",
+   "encalhou","afundou","costa",
+   "luz de sinalizacao","guia para navios",
+   "faroleira"
+ ],
+
+ no: [
+   "casa","vela","lampada",
+   "assassina","quarto","lanterna"
+ ],
+
+ irrelevant: [
+   "comida","cachorro","dinheiro",
+   "telefone","chuva","trabalho"
+ ]
+},
+
+{
+ title: "O restaurante",
+
+ story: "Um homem vai a um restaurante, pede albatroz, dá uma mordida, sai do estabelecimento e tira a própria vida. Por quê?",
+
+ solution: "O homem havia sobrevivido a um naufrágio com outras pessoas. Na ocasião, disseram a ele que a carne que comeu era de albatroz. Ao provar albatroz verdadeiro no restaurante, percebeu que havia sido enganado e que, na verdade, tinha comido carne humana.",
+
+ hints: [
+   "Ele já havia passado por uma situação traumática.",
+   "O sabor da comida fez com que ele percebesse algo."
+ ],
+
+ yes: [
+   "naufragio","carne humana",
+   "carne de pessoa","carne de gente",
+   "sobrevivente","sobreviveu",
+   "albatroz","ilha deserta",
+   "enganado","mentiram",
+   "sabor diferente","gosto diferente",
+   "canibalismo"
+ ],
+
+ no: [
+   "veneno","assalto","conta",
+   "garcom","roubo","intoxicacao"
+ ],
+
+ irrelevant: [
+   "chuva","carro","telefone",
+   "dinheiro","musica"
+ ]
+}
+
+];
+
+let current = 0;
+let score = 0;
+let solved = false;
+let asked = 0;
+
+function normalize(text) {
+ return text
+   .toLowerCase()
+   .normalize("NFD")
+   .replace(/[\u0300-\u036f]/g,"")
+   .replace(/[?!.,;:]/g,"")
+   .replace(/\s+/g," ")
+   .trim();
+}
+
+function matches(question, words) {
+ return words.some(word => {
+   const normalized = normalize(word);
+   return question.includes(normalized);
+ });
+}
+
+function loadStory() {
+
+ const m = mysteries[current];
+
+ document.getElementById("title").textContent = m.title;
+ document.getElementById("story").textContent = m.story;
+ document.getElementById("number").textContent = current + 1;
+
+ document.getElementById("history").innerHTML =
+   '<p style="color:#8492a8">Suas perguntas aparecerão aqui.</p>';
+
+ document.getElementById("answer").style.display = "none";
+ document.getElementById("question").value = "";
+
+ solved = false;
+ asked = 0;
+}
+
+function ask() {
+
+ const input = document.getElementById("question");
+ const original = input.value.trim();
+
+ if (!original) return;
+
+ const q = normalize(original);
+ const m = mysteries[current];
+
+ const yes = matches(q,m.yes);
+ const no = matches(q,m.no);
+ const irrelevant = matches(q,m.irrelevant);
+
+ let result = "IRRELEVANTE";
+
+ let explanation =
+   "Essa pergunta não ajuda muito a resolver o mistério. Tente investigar outro detalhe.";
+
+ if (irrelevant) {
+
+   result = "IRRELEVANTE";
+
+   explanation =
+     "Esse detalhe não é importante para descobrir a solução.";
+
+ } else if (yes && !no) {
+
+   result = "SIM";
+
+   explanation =
+     "Muito bem! Essa informação está relacionada à solução do mistério.";
+
+ } else if (no && !yes) {
+
+   result = "NÃO";
+
+   explanation =
+     "Não! Essa possibilidade não corresponde ao que aconteceu.";
+
+ } else if (yes && no) {
+
+   result = "IRRELEVANTE";
+
+   explanation =
+     "Sua pergunta pode ter mais de uma interpretação. Tente formulá-la de outra maneira.";
+
+ }
+
+ asked++;
+
+ const box = document.getElementById("answer");
+
+ box.style.display = "block";
+
+ box.innerHTML =
+   "<strong>🤖 MESTRE: " + result + "</strong><br>" +
+   explanation;
+
+ const history = document.getElementById("history");
+
+ if (asked === 1) {
+   history.innerHTML = "";
+ }
+
+ const entry = document.createElement("div");
+
+ entry.className = "entry";
+
+ entry.textContent =
+   "Você: " + original + " | Mestre: " + result;
+
+ history.prepend(entry);
+
+ input.value = "";
+}
+
+function hint() {
+
+ const m = mysteries[current];
+
+ const index = Math.min(
+   Math.floor(asked / 3),
+   m.hints.length - 1
+ );
+
+ const box = document.getElementById("answer");
+
+ box.style.display = "block";
+
+ box.innerHTML =
+   "<strong>💡 DICA DO MESTRE</strong><br>" +
+   m.hints[index];
+}
+
+function reveal() {
+
+ const m = mysteries[current];
+
+ const box = document.getElementById("answer");
+
+ box.style.display = "block";
+
+ box.innerHTML =
+   "<strong>📜 SOLUÇÃO DO MISTÉRIO</strong><br>" +
+   m.solution;
+
+ solved = true;
+}
+
+function nextStory() {
+
+ if (solved) {
+   score += 10;
+ }
+
+ document.getElementById("score").textContent = score;
+
+ current = (current + 1) % mysteries.length;
+
+ loadStory();
+}
+
+document.getElementById("question").addEventListener(
+ "keydown",
+ function(event) {
+   if (event.key === "Enter") {
+     ask();
+   }
+ }
+);
+
+loadStory();
+
+</script>
+
+</body>
+</html>
+
